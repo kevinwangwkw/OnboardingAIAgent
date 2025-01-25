@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Onboarding Assistant")
-        self.setGeometry(300, 300, 300, 150)
+        self.setGeometry(0, 0, 300, 450)
 
         self.is_recording = False
         self.audio_thread = None
