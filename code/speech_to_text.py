@@ -13,5 +13,7 @@ def speech_to_text(filename, api_key):
 
         if response.status_code == 200:
             print("Transcription:", response.json().get("text", ""))
+            return response.json().get("text", "")
         else:
             print("Error during transcription:", response.text) 
+            return None

@@ -1,0 +1,6 @@
+I’m Jane, your onboarding assistant.
+I will walk you through everything you need to understand how to use Google Docs effectively.
+Feel free to speak or ask any questions at any time using the "Speak" button at the bottom.
+
+To get started, do you want me to walk you through all the essential features first? 
+Alternatively, tell me what your specific problem is and we can focus on features relevant to your problem first.

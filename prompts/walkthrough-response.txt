@@ -1,0 +1,5 @@
+I'm giving the user the following two options:
+Option 1: Continue on with the walkthrough, move on to the next step or feature
+Option 2: Ask a question about the current step or feature, ask for clarification, express concerns
+
+Based on the user's response as provided after this sentence, please repond with the option number (number only: 1 or 2)to indicate which option the user selected:

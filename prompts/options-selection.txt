@@ -1,0 +1,6 @@
+I'm giving the user the following three options:
+Option 1: Perform a entire walkthrough of all the essential features of the product
+Option 2: Focus on product features relevant to their specific problem
+Option 3: Other
+
+Based on the user's response as provided after this sentence, please repond with the option number (number only: 1, 2 or 3)to indicate which option the user selected: 

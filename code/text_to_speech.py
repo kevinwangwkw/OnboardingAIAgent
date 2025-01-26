@@ -28,5 +28,5 @@ def text_to_speech(text, client, save_path=None):
             audio_file.write(response.content)
         print(f"Audio saved to {save_path}")
 
-    except openai.error.OpenAIError as e:
+    except Exception as e:
         print(f"Request failed: {e}")
