@@ -146,6 +146,23 @@ class Agent:
         # Transition to completion
         #self.transition(State.COMPLETE)
         return None
+    
+    def check_step(self):
+        take_screenshot()
+        explanation = generate_text_with_image(get_text("prompts/confirm-step.txt") + self.features[self.feature_index], "supporting/screenshot.png", client)
+        print("check: " + explanation)
+        if explanation == "yes" or explanation == "Yes" or explanation == "yes." or explanation == "Yes.":
+            engine = pyttsx3.init()
+            engine.setProperty("'rate'", 155) 
+            engine.say("Great! Let's move on to the next step.")
+            engine.runAndWait()   
+            return True
+        else:   
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 155) 
+            engine.say(explanation)
+            engine.runAndWait()                      
+        return False
 
     def complete(self):
         # Complete the onboarding process

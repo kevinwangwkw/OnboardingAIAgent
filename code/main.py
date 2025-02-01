@@ -196,8 +196,9 @@ class MainWindow(QMainWindow):
             user_response = str(speech_to_text("supporting/recording.wav", OPENAI_API_KEY))
             option = generate_text(get_text("prompts/walkthrough-response.txt") + user_response, client)
             if option == "1":
-                agent.feature_index += 1
-                agent.feature(agent.feature_index)
+                if agent.check_step():
+                    agent.feature_index += 1
+                    agent.feature(agent.feature_index)
             else:
                 #print("answer question")
                 agent.asnwer_question(user_response)
@@ -282,16 +283,3 @@ if __name__ == "__main__":
     #print("--- %s seconds ---" % (time.time() - start_time))
 
     sys.exit(app.exec())
-
-
-'''
-
-listen for response (speech (ask question, next), monitor)
-label resize
-
-introduce feature & guide (screenshot, voice)
-respond to question (screenshot, voice)
-
-'''
-
-#intoduction audio

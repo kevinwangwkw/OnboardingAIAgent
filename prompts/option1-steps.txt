@@ -1,5 +1,5 @@
 Head to the Google Docs website
 Create a new document
 Write something in document
-Explain how to save document
-Explain how to share document
+Save document
+Share document
