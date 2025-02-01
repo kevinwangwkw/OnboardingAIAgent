@@ -1,8 +1,24 @@
 import time
+from response_generation import generate_text, generate_text_with_image
+from text_to_speech import text_to_speech
+from take_screenshot import take_screenshot
+from openai import OpenAI
+from playsound import playsound
+import threading
+from PyQt6.QtCore import QTimer
+import pyttsx3
+
+def get_text(file_path):
+    with open(file_path, "r") as file:
+        return file.read()
 
 def load_features(file_path):
     with open(file_path, "r") as file:
         return [line.strip() for line in file.readlines() if line.strip()]
+    
+OPENAI_API_KEY = get_text("../api_key.txt").strip()
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 class State:
     INTRO = "intro"
@@ -53,15 +69,18 @@ class Agent:
         return None
 
     def walkthrough(self):
-        # Guide through features
-        # Transition to confirmation
-        #self.transition(State.CONFIRM)
-        #return None
         print("performing walkthrough")
         self.features = load_features("prompts/option1-steps.txt")
-        new_features = self.features[:-1]
-        self.window.update_features(new_features)
-        self.feature(self.feature_index)
+        new_features = self.features
+        self.window.update_features(new_features, callback=self.on_features_updated)
+        #self.window.update_features(new_features, lambda: QTimer.singleShot(0, self.on_features_updated))
+        #self.window.update_features(new_features, lambda: self.on_features_updated)
+
+    def on_features_updated(self):
+        #self.feature(self.feature_index)
+        #threading.Thread(target=self.start_feature_explanation).start()
+        self.start_feature_explanation()
+        #threading.Thread(target=self.feature(self.feature_index)).start()
         #self.feature_index += 1
         #print(features)
         # for index, feature in enumerate(features):
@@ -71,11 +90,14 @@ class Agent:
         #     # if not self.wait_for_user_confirmation():
         #     #     break
         # self.transition(State.CONFIRM)
+    def start_feature_explanation(self):
+        self.feature(self.feature_index)
 
     def feature(self, index):
         if (index >= len(self.features)):
-            self.transition(State.CONFIRM)
+            self.transition(State.COMPLETE)
             return
+        #time.sleep(2)
         print(f"Feature {index + 1}: {self.features[index]}")
         self.window.highlight_feature(index)
         self.explain_feature(self.features[index])
@@ -87,7 +109,30 @@ class Agent:
     def explain_feature(self, feature):
         # Use TTS to explain the feature
         #text_to_speech(f"Let's go through: {feature}", self.client)
+        #print("explaining feature: " + feature)
+        #option = generate_text(get_text("prompts/walkthrough-response.txt") + user_response, client)
+
+        take_screenshot()
+        explanation = generate_text_with_image(get_text("prompts/explain-feature.txt") + feature, "supporting/screenshot.png", client)
+        #explanation = feature
+        #text_to_speech(explanation, client, "supporting/feature.wav")
+        #playsound("supporting/feature.wav")
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 155) 
+        engine.say(explanation)
+        engine.runAndWait()
+
         print("explaining feature: " + feature)
+
+        # prompt, image_path, client
+    def asnwer_question(self, text):
+        take_screenshot()
+        explanation = generate_text_with_image(get_text("prompts/answer-question.txt") + text, "supporting/screenshot.png", client)
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 155) 
+        engine.say(explanation)
+        engine.runAndWait()
+        print("answering question")
 
     def specific_problem(self):
         # Address specific problem
@@ -105,7 +150,12 @@ class Agent:
     def complete(self):
         # Complete the onboarding process
         #text_to_speech("You've completed the onboarding...", self.client)
-        return None
+        text = get_text("prompts/end.txt")
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 155) 
+        engine.say(text)
+        engine.runAndWait()
+        #return None
     
     def wait_for_user_confirmation(self):
         # Wait for user input to confirm or ask questions

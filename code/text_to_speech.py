@@ -1,5 +1,10 @@
 import openai
 import os
+import time
+import sounddevice as sd
+import numpy as np
+import subprocess
+import threading
 
 def text_to_speech(text, client, save_path=None):
     """
@@ -30,3 +35,49 @@ def text_to_speech(text, client, save_path=None):
 
     except Exception as e:
         print(f"Request failed: {e}")
+
+def play_speech_streaming(text, client):
+    """
+    Streams TTS audio using OpenAI's API, writing to a FIFO pipe and playing it in real time.
+    Requires ffplay from the ffmpeg suite.
+    """
+    fifo_path = "output_pipe.mp3"
+    
+    # Create a named pipe (FIFO)
+    if os.path.exists(fifo_path):
+        os.remove(fifo_path)
+    os.mkfifo(fifo_path)
+
+    # Create the streaming TTS response
+    try:
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input=text
+        )
+    except Exception as e:
+        print(f"TTS request failed: {e}")
+        os.remove(fifo_path)
+        return
+
+    # Define a function that streams audio to the FIFO
+    def stream_audio():
+        try:
+            response.stream_to_file(fifo_path)
+        except Exception as e:
+            print("Streaming error:", e)
+
+    # Start streaming in a separate thread
+    stream_thread = threading.Thread(target=stream_audio, daemon=True)
+    stream_thread.start()
+
+    # Use ffplay to play audio from the FIFO in real time.
+    # -nodisp: no video window, -autoexit: exit when playback finished, -loglevel panic: suppress debug messages.
+    try:
+        proc = subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "-loglevel", "panic", fifo_path])
+        proc.wait()
+    except Exception as e:
+        print("Playback error:", e)
+
+    stream_thread.join()
+    os.remove(fifo_path)

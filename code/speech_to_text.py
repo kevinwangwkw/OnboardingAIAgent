@@ -1,6 +1,8 @@
 import requests
+import whisper
 
 def speech_to_text(filename, api_key):
+    '''
     with open(filename, "rb") as audio_file:
         headers = {
             "Authorization": f"Bearer {api_key}"
@@ -17,3 +19,8 @@ def speech_to_text(filename, api_key):
         else:
             print("Error during transcription:", response.text) 
             return None
+    '''
+    model = whisper.load_model("tiny.en")
+    result = model.transcribe(filename, fp16=False)
+    print("transcription: "+ result["text"])
+    return result["text"]
