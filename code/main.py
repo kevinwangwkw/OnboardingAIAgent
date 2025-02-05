@@ -1,7 +1,8 @@
 import sys
 import numpy as np
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QFrame, QHBoxLayout, QSizePolicy
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QFrame, QHBoxLayout, QSizePolicy, QGraphicsDropShadowEffect
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QColor, QIcon, QFont
 from openai import OpenAI
 import sounddevice as sd
 import wave
@@ -31,9 +32,18 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setStyleSheet("background-color: lightgray;")
 
-        self.setWindowTitle("Onboarding Assistant")
-        self.setGeometry(0, 0, 300, 500)  # Initial size, will be adjusted dynamically
+        self.setWindowTitle("Naived Onboarding")
+        # self.setGeometry(0, 0, 300, 500)  # Initial size, will be adjusted dynamically
+
+        screen = QApplication.primaryScreen()
+        rect = screen.availableGeometry()
+        width = 300
+        height = 500
+        x = rect.x() + rect.width() - width
+        y = rect.y()
+        self.setGeometry(x, y, width, height)
 
         self.is_recording = False
         self.audio_thread = None
@@ -53,31 +63,90 @@ class MainWindow(QMainWindow):
         self.feature_frames = []
         for text in self.feature_texts:
             frame = QFrame(self)
-            frame.setStyleSheet("background-color: gray; border: none; border-radius: 10px;")
+            frame.setStyleSheet("background-color: white; border: none; border-radius: 5px;")
             frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)  # Allow frame to expand
             label = QLabel(text, frame)
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            label.setStyleSheet("color: white;")
+            label.setStyleSheet("color: #333333; background-color: white;")
             label.setWordWrap(True)  # Enable word wrapping
+            font = QFont("Arial", 12, QFont.Weight.Bold)
+            label.setFont(font)
             label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)  # Allow label to expand
             layout = QVBoxLayout(frame)
             layout.addWidget(label)
+            shadow = QGraphicsDropShadowEffect()
+            shadow.setBlurRadius(8)
+            shadow.setOffset(2, 2)
+            shadow.setColor(QColor(0, 0, 0, 50))
+            frame.setGraphicsEffect(shadow)
             self.feature_frames.append((frame, label))  # Store both frame and label
 
         # Create a single button for recording
-        self.record_button = QPushButton("Speak", self)
-        self.record_button.setFixedSize(100, 100)  # Set fixed size for the button
-        self.record_button.setStyleSheet("""
-            QPushButton {
-                border-radius: 50px;  /* Half of the width/height to make it circular */
-                background-color: #4CAF50;  /* Green background */
-                color: white;
-                font-size: 16px;
-            }
-            QPushButton:pressed {
-                background-color: #45a049;  /* Darker green when pressed */
+        self.record_button = QPushButton("", self)
+        self.record_button.setFixedSize(80, 80)
+
+        # self.record_button.setIcon(QIcon("supporting/avatar.png"))
+        # self.record_button.setIconSize(QSize(45, 45))
+        # self.record_button.setStyleSheet("""
+        #     QPushButton {
+        #         border-radius: 40px;
+        #         background-color: white;
+        #         border: 2px solid lightgray;
+        #         padding: 0px;
+        #     }
+        #     QPushButton:pressed {
+        #         background-color: #f0f0f0;
+        #         border: 2px solid lightgray;
+        #         padding: 0px;
+        #     }
+        # """)
+        # Create a container widget for perfect centering
+        icon_container = QWidget(self.record_button)
+        icon_container.setFixedSize(45, 45)
+        icon_layout = QVBoxLayout(icon_container)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Use QLabel for pixel-perfect icon display
+        icon_label = QLabel(icon_container)
+        icon_label.setPixmap(QIcon("supporting/avatar.png").pixmap(45, 45))
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_layout.addWidget(icon_label)
+
+        icon_container.setStyleSheet("background: transparent;")
+        icon_label.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
             }
         """)
+        
+        # Set the container as button's layout
+        btn_layout = QVBoxLayout(self.record_button)
+        btn_layout.setContentsMargins(0, 0, 0, 0)
+        btn_layout.setSpacing(0)
+        btn_layout.addSpacing(10)  # Add vertical space to move the icon slightly downward
+        btn_layout.addWidget(icon_container, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.record_button.setStyleSheet("""
+            QPushButton {
+                background-color: white;
+                border: 2px solid lightgray;
+                border-radius: 40px;
+                padding: 0px;
+                margin: 0px;
+            }
+            QPushButton:pressed {
+                background-color: #f0f0f0;
+                border: 2px solid lightgray;
+            }
+        """)
+
+
+        button_shadow = QGraphicsDropShadowEffect()
+        button_shadow.setBlurRadius(8)
+        button_shadow.setOffset(2, 2)
+        button_shadow.setColor(QColor(0, 0, 0, 50))
+        self.record_button.setGraphicsEffect(button_shadow)
         self.record_button.clicked.connect(self.toggle_recording)
 
         # Create a layout and add widgets
@@ -114,15 +183,22 @@ class MainWindow(QMainWindow):
         if new_count > current_count:
             for _ in range(new_count - current_count):
                 frame = QFrame(self)
-                frame.setStyleSheet("background-color: gray; border: none; border-radius: 10px;")
+                frame.setStyleSheet("background-color: white; border: none; border-radius: 5px;")
                 frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
                 label = QLabel("", frame)
                 label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                label.setStyleSheet("color: white;")
+                label.setStyleSheet("color: #333333; background-color: white;")
                 label.setWordWrap(True)
+                font = QFont("Arial", 12, QFont.Weight.Normal)
+                label.setFont(font)
                 label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
                 layout = QVBoxLayout(frame)
                 layout.addWidget(label)
+                shadow = QGraphicsDropShadowEffect()
+                shadow.setBlurRadius(8)
+                shadow.setOffset(2, 2)
+                shadow.setColor(QColor(0, 0, 0, 50))
+                frame.setGraphicsEffect(shadow)
                 self.feature_frames.append((frame, label))
                 self.layout.insertWidget(len(self.feature_frames) - 1, frame)
         elif new_count < current_count:
@@ -155,12 +231,17 @@ class MainWindow(QMainWindow):
 
         :param feature_index: The index of the feature to highlight (0-based).
         """
-        for i, (frame, _) in enumerate(self.feature_frames):
+        default_frame_style = "background-color: white; border: none; border-radius: 5px; font-weight: normal"
+        default_label_style = "color: #333333; background-color: white; border: none;"
+        highlight_frame_style = "background-color: white; border: 2px solid blue; border-radius: 5px; font-weight: bold"
+        for i, (frame, label) in enumerate(self.feature_frames):
             if i == feature_index:
-                frame.setStyleSheet("background-color: blue; border: none; border-radius: 10px;")
+                frame.setStyleSheet(highlight_frame_style)
+                label.setStyleSheet(default_label_style)
             else:
-                frame.setStyleSheet("background-color: gray; border: none; border-radius: 10px;")
-        print("hightlighted feature: " + str(feature_index))
+                frame.setStyleSheet(default_frame_style)
+                label.setStyleSheet(default_label_style)
+        print("highlighted feature: " + str(feature_index))
 
     def toggle_recording(self):
         if self.is_recording:
@@ -170,14 +251,14 @@ class MainWindow(QMainWindow):
 
     def start_recording(self):
         self.is_recording = True
-        self.record_button.setText("Stop")
+        #self.record_button.setText("Stop")
 
         self.audio_thread = threading.Thread(target=self.record_audio)
         self.audio_thread.start()
 
     def stop_recording(self):
         self.is_recording = False
-        self.record_button.setText("Speak")
+        #self.record_button.setText("Speak")
 
         if self.audio_thread:
             self.audio_thread.join()
