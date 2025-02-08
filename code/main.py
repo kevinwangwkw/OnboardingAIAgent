@@ -32,9 +32,10 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("background-color: lightgray;")
 
-        self.setWindowTitle("Naived Onboarding")
+        self.setStyleSheet("background-color: lightgray; border-radius: 10px;")
+
+        #self.setWindowTitle("Naived Onboarding")
         # self.setGeometry(0, 0, 300, 500)  # Initial size, will be adjusted dynamically
 
         screen = QApplication.primaryScreen()
